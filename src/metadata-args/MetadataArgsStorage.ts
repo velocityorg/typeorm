@@ -224,8 +224,12 @@ export class MetadataArgsStorage {
         array.forEach(item => {
             const sameTarget = Array.isArray(target) ? target.indexOf(item.target) !== -1 : item.target === target;
             if (sameTarget) {
-                if (!newArray.find(newItem => newItem.propertyName === item.propertyName))
+                const existingIndex = newArray.findIndex(newItem => newItem.propertyName === item.propertyName);
+                if (target instanceof Array && existingIndex !== -1 && target.indexOf(item.target) < target.indexOf(newArray[existingIndex].target)) {
+                    newArray[existingIndex] = item;
+                } else if (existingIndex === -1) {
                     newArray.push(item);
+                }
             }
         });
         return newArray;
