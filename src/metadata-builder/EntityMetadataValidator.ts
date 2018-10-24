@@ -65,7 +65,7 @@ export class EntityMetadataValidator {
                 throw new Error(`Entity ${entityMetadata.name} has empty discriminator value. Discriminator value should not be empty.`);
 
             const sameDiscriminatorValueEntityMetadata = allEntityMetadatas.find(metadata => {
-                return metadata !== entityMetadata && metadata.discriminatorValue === entityMetadata.discriminatorValue;
+                return metadata !== entityMetadata && metadata.inheritancePattern === "STI" && metadata.discriminatorValue === entityMetadata.discriminatorValue;
             });
             if (sameDiscriminatorValueEntityMetadata)
                 throw new Error(`Entities ${entityMetadata.name} and ${sameDiscriminatorValueEntityMetadata.name} as equal discriminator values. Make sure their discriminator values are not equal using @DiscriminatorValue decorator.`);
