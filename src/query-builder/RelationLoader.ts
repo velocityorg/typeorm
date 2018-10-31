@@ -200,13 +200,35 @@ export class RelationLoader {
             delete entity[dataIndex];
             entity[promiseIndex] = value;
             value.then(
-              // ensure different value is not assigned yet
-              result => entity[promiseIndex] === value ? setData(entity, result) : result
+                // ensure different value is not assigned yet
+                result => entity[promiseIndex] === value ? setData(entity, result) : result
             );
             return value;
         };
 
-        Object.defineProperty(entity, relation.propertyName, {
+        let targetEntity = entity;
+        // check if we are lazyLoading a relationship defined in a embedded entity
+        if (relation.embeddedMetadata && relation.propertyName != relation.propertyPath) {
+            const propertyNames = [...relation.embeddedMetadata.parentPropertyNames];
+            const extractEmbeddedColumnValue = (propertyNames: string[], value: ObjectLiteral): any => {
+                const propertyName = propertyNames.shift();
+                if (propertyName) {
+                    if (value[propertyName]) {
+                        return extractEmbeddedColumnValue(propertyNames, value[propertyName]);
+                    }
+                    return undefined;
+                }
+                return value;
+            };
+            const embeddedObject = extractEmbeddedColumnValue(propertyNames, targetEntity);
+            // check if embedded entity has not been initialized yet
+            if (embeddedObject === undefined) {
+                return;
+            }
+            targetEntity = embeddedObject;
+        }
+
+        Object.defineProperty(targetEntity, relation.propertyName, {
             get: function() {
                 if (this[resolveIndex] === true || this[dataIndex] !== undefined) // if related data already was loaded then simply return it
                     return Promise.resolve(this[dataIndex]);
@@ -214,8 +236,11 @@ export class RelationLoader {
                 if (this[promiseIndex]) // if related data is loading then return a promise relationLoader loads it
                     return this[promiseIndex];
 
+                // `this` can sometimes be an embedded entity with a lazy relationship defined, we use `entity` to make
+                // sure the relation loader can get the parent metadata when necessary
+
                 // nothing is loaded yet, load relation data and save it in the model once they are loaded
-                const loader = relationLoader.load(relation, this, queryRunner).then(
+                const loader = relationLoader.load(relation, entity, queryRunner).then(
                     result => relation.isOneToOne || relation.isManyToOne ? result[0] : result
                 );
                 return setPromise(this, loader);
