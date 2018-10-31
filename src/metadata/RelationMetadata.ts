@@ -345,6 +345,12 @@ export class RelationMetadata {
             const embeddedObject = extractEmbeddedColumnValue(propertyNames, entity);
 
             if (this.isLazy) {
+                if (embeddedObject === undefined)
+                    return undefined;
+
+                if (embeddedObject[this.propertyName] !== undefined)
+                    return embeddedObject[this.propertyName];
+
                 if (embeddedObject["__" + this.propertyName + "__"] !== undefined)
                     return embeddedObject["__" + this.propertyName + "__"];
 
@@ -353,7 +359,7 @@ export class RelationMetadata {
 
                 return undefined;
             }
-            return embeddedObject ? embeddedObject[this.isLazy ? "__" + this.propertyName + "__" : this.propertyName] : undefined;
+            return embeddedObject ? embeddedObject[this.propertyName] : undefined;
 
         } else { // no embeds - no problems. Simply return column name by property name of the entity
             if (this.isLazy) {

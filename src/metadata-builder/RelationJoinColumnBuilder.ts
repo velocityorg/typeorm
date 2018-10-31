@@ -133,6 +133,7 @@ export class RelationJoinColumnBuilder {
                 relationalColumn = new ColumnMetadata({
                     connection: this.connection,
                     entityMetadata: relation.entityMetadata,
+                    embeddedMetadata: relation.embeddedMetadata,
                     args: {
                         target: "",
                         mode: "virtual",
@@ -150,7 +151,7 @@ export class RelationJoinColumnBuilder {
                             unsigned: referencedColumn.unsigned,
                             comment: referencedColumn.comment,
                             primary: relation.isPrimary,
-                            nullable: relation.isNullable
+                            nullable: relation.isNullable,
                         }
                     }
                 });
