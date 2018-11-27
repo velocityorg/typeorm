@@ -10,7 +10,8 @@ describe("github issues > #2965 Reuse preloaded lazy relations", () => {
     let connections: Connection[];
     before(async () => connections = await createTestingConnections({
         entities: [ __dirname + "/entity/*{.js,.ts}" ],
-        logging: true,
+        // use for manual validation
+        // logging: true,
     }));
     beforeEach(() => reloadTestingDatabases(connections));
     after(() => closeTestingConnections(connections));
@@ -40,21 +41,15 @@ describe("github issues > #2965 Reuse preloaded lazy relations", () => {
         }
 
         {
-            console.log('preload notes');
-            const res = await repoPerson.find({ relations: [ 'notes' ] });
-            console.log(res);
-            const personANotes = await res[ 0 ].notes;
-            console.log(personANotes);
+            const res = await repoPerson.find({ relations: ['notes'] });
+            const personANotes = await res[0].notes;
             loadCalledCounter.should.be.equal(0);
             personANotes[0].label.should.be.equal('note1');
         }
 
         {
-            console.log('lazy load notes');
             const res = await repoPerson.find();
-            console.log(res);
-            const personBNotes = await res[ 1 ].notes;
-            console.log(personBNotes);
+            const personBNotes = await res[1].notes;
             loadCalledCounter.should.be.equal(1);
             personBNotes[0].label.should.be.equal('note2');
         }

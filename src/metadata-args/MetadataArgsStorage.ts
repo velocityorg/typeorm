@@ -20,6 +20,7 @@ import {GeneratedMetadataArgs} from "./GeneratedMetadataArgs";
 import {TreeMetadataArgs} from "./TreeMetadataArgs";
 import {UniqueMetadataArgs} from "./UniqueMetadataArgs";
 import {CheckMetadataArgs} from "./CheckMetadataArgs";
+import {ExclusionMetadataArgs} from "./ExclusionMetadataArgs";
 
 /**
  * Storage all metadatas args of all available types: tables, columns, subscribers, relations, etc.
@@ -42,6 +43,7 @@ export class MetadataArgsStorage {
     readonly indices: IndexMetadataArgs[] = [];
     readonly uniques: UniqueMetadataArgs[] = [];
     readonly checks: CheckMetadataArgs[] = [];
+    readonly exclusions: ExclusionMetadataArgs[] = [];
     readonly columns: ColumnMetadataArgs[] = [];
     readonly generations: GeneratedMetadataArgs[] = [];
     readonly relations: RelationMetadataArgs[] = [];
@@ -124,6 +126,14 @@ export class MetadataArgsStorage {
     filterChecks(target: (Function|string)|(Function|string)[]): CheckMetadataArgs[] {
         return this.checks.filter(check => {
             return target instanceof Array ? target.indexOf(check.target) !== -1 : check.target === target;
+        });
+    }
+
+    filterExclusions(target: Function|string): ExclusionMetadataArgs[];
+    filterExclusions(target: (Function|string)[]): ExclusionMetadataArgs[];
+    filterExclusions(target: (Function|string)|(Function|string)[]): ExclusionMetadataArgs[] {
+        return this.exclusions.filter(exclusion => {
+            return target instanceof Array ? target.indexOf(exclusion.target) !== -1 : exclusion.target === target;
         });
     }
 
@@ -222,24 +232,6 @@ export class MetadataArgsStorage {
     }
 
     /**
-     * Filters given array by a given target or targets and prevents duplicate embedded property names.
-     */
-    protected filterByTargetAndWithoutDuplicateEmbeddedProperties<T extends EmbeddedMetadataArgs>(array: T[], target: (Function|string)|(Function|string)[]): T[] {
-        const newArray: T[] = [];
-        array.forEach(item => {
-            const sameTarget = target instanceof Array ? target.indexOf(item.target) !== -1 : item.target === target;
-            if (sameTarget) {
-                const isDuplicateEmbeddedProperty = newArray.find((newItem: EmbeddedMetadataArgs): boolean =>
-                    newItem.prefix === item.prefix && newItem.propertyName === item.propertyName
-                );
-                if (!isDuplicateEmbeddedProperty)
-                    newArray.push(item);
-            }
-        });
-        return newArray;
-    }
-
-    /**
      * Filters given array by a given target or targets and prevents duplicate relation property names.
      */
     protected filterByTargetAndWithoutDuplicateRelationProperties<T extends RelationMetadataArgs>(array: T[], target: (Function|string)|(Function|string)[]): T[] {
@@ -255,6 +247,24 @@ export class MetadataArgsStorage {
                 } else if (existingIndex === -1) {
                     newArray.push(item);
                 }
+            }
+        });
+        return newArray;
+    }
+
+    /**
+     * Filters given array by a given target or targets and prevents duplicate embedded property names.
+     */
+    protected filterByTargetAndWithoutDuplicateEmbeddedProperties<T extends EmbeddedMetadataArgs>(array: T[], target: (Function|string)|(Function|string)[]): T[] {
+        const newArray: T[] = [];
+        array.forEach(item => {
+            const sameTarget = target instanceof Array ? target.indexOf(item.target) !== -1 : item.target === target;
+            if (sameTarget) {
+                const isDuplicateEmbeddedProperty = newArray.find((newItem: EmbeddedMetadataArgs): boolean =>
+                    newItem.prefix === item.prefix && newItem.propertyName === item.propertyName
+                );
+                if (!isDuplicateEmbeddedProperty)
+                    newArray.push(item);
             }
         });
         return newArray;
